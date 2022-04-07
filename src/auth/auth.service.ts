@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthDto } from "./dto";
 import * as argon from 'argon2'
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 @Injectable()
 export class AuthService{
@@ -12,20 +13,32 @@ export class AuthService{
     const hash = await argon.hash(dto.password)
 
     // save new user in the db
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        hash,
+    try {
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          hash,
+        }
+      })
+      
+      // return saved user
+      delete user.hash
+      
+      return user
+    }
+    catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        // code 'P2002' refers to a built-in error from prisma stating that the field is not unique 
+        if (err.code === 'P2002') {
+          throw new ForbiddenException('This email address is already registered',)
+        }
       }
-    })
-
-    // return saved user
-    delete user.hash
-
-    return user
+      throw err
+    }
   }
   
-  signin() {
+  async signin() {
     return { msg: 'I have signed in'}
   }
   
