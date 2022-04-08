@@ -1,27 +1,65 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
-import { AppModule } from '../src/app.module'
-
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { AppModule } from '../src/app.module';
 
 describe('App e2e', () => {
-let app: INestApplication
+  let app: INestApplication;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile()
+    }).compile();
 
-    app = moduleRef.createNestApplication()
+    app = moduleRef.createNestApplication();
 
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true
-    }))
-    await app.init()
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+      }),
+    );
+    await app.init();
+
+    prisma = app.get(PrismaService);
+    await prisma.cleanDb();
+  });
+
+  afterAll(() => {
+    app.close();
+  });
+
+  describe('Auth', () => {
+    describe('signup', () => {
+      
+    })
+    describe('signin', () => {
+
+    })
   })
+  describe('User', () => {
+    describe('Get me', () => {
+      
+    })
+    describe('Edit user', () => {
 
-  afterAll( () => {
-    app.close()
+    })
   })
-  
-  it.todo('should pass')
-})
+  describe('Bookmarks', () => {
+    describe('Create bookmark', () => {
+      
+    })
+    describe('Get all bookmarks', () => {
+
+    })
+    describe('Get bookmark by id', () => {
+
+    })
+    describe('Edit bookmark', () => {
+
+    })
+    describe('Delete bookmark', () => {
+
+    })
+  })
+});
